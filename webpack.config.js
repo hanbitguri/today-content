@@ -1,61 +1,64 @@
-const path = require('path') 
-// Node.js 의 빌트인 객체 'path' , 경로를 사용할때 유용하다.
+require("dotenv").config(); 
 
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
+const isProd = process.env.NODE_ENV === "production"; 
+const PORT = process.env.PORT || 3000;
 
-module.exports={
-    mode:'development',  
-    resolve: {
-        extensions: ['.js', '.jsx','.tsx'], 
+module.exports = {
+  mode: isProd ? "production" : "development",
+  devtool: isProd ? "hidden-source-map" : "source-map", // development 환경에서만 source-map을 만든다.
+  entry: "./src/index.tsx",
+  output: {
+    filename: "[name].js", 
+    path: path.join(__dirname, "/dist"), 
+  },
+  resolve: {
+    modules: ["node_modules"],
+    extensions: [".js", ".jsx", ".ts", ".tsx"],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(ts|tsx)$/,
+        loader: "ts-loader",
+        options: {
+          transpileOnly: isProd ? false : true, 
+        },
       },
-    entry: './src/index.js' 
-    ,
-    output:{
-        path:path.resolve('./dist'), 
-        filename:'bundle.[hash].js'
-    },
-    module:{  
-        rules:[
-            {
-                test:/\.css$/, 
-                use:['style-loader','css-loader']
-            },
-            {
-                test:/\.png$/,
-                use:[
-                    {
-                    loader:'file-loader',
-                    options:{
-                        name:'[name].[ext]?[hash]'
-                    }
-                    }
-            ]
-            },
-            {
-                test: /\.(js|jsx)$/,
-                exclude: '/node_modules/', 
-                use:[
-                    {
-                        loader:'babel-loader',
-                    },
-                ]
-              },
-        ]
-    },
-    plugins:[
-        new CleanWebpackPlugin(),
-        new HtmlWebpackPlugin({
-            template:'./public/index.html'
-        })
+      {
+        test: /\.css?$/,
+        use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.(webp|jpg|png|jpeg)$/,
+        loader: "file-loader",
+        options: {
+          name: "[name].[ext]?[hash]",
+        },
+      },
     ],
-    devServer: {
-        host: 'localhost',
-        port: '3000',
-        open: true, 
-        //historyApiFallback: true,
-        hot: true, 
-      },
-
-}
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, "public", "index.html"),
+      hash: true,
+    }), 
+  ],
+  stats: "errors-only",
+devServer: {
+static: {
+directory: path.resolve(__dirname, "public"),
+},
+port: PORT,
+open: true,
+client: {
+overlay: true,
+},
+hot: true,
+host: "localhost",
+historyApiFallback: true,
+compress: true,
+},
+};
